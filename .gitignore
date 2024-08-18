@@ -1,3 +1,5 @@
 key
 test
 **backup**
+.env
+__pycache__
