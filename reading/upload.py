@@ -1,18 +1,21 @@
 from os import environ
 from dotenv import load_dotenv
 import requests
+import sys
 from parse import parse
 
 load_dotenv()
 hook = environ.get('hook')
 hook_key = environ.get('hook_key')
 collect_tags = ['VERB', 'NOUN', 'ADV', 'ADJ', 'DET', 'NUM']
+file_name = sys.argv[1]
+sheet_name = sys.argv[2]
 
 def newSentence(i, j):
   return {'text': '', 'sections': [], 'words': [], 'chapter': i + 1, 'paragraph': j + 1}
 
 if isinstance(hook, str):
-  with open('data.txt') as f:
+  with open(file_name) as f:
     chapter_texts = f.read().split('\n\n')
     chapters = []
     # chapter由两个换行分割
@@ -45,7 +48,7 @@ if isinstance(hook, str):
           sentences.append(sentence)
         chapter.append(sentences)
       chapters.append(chapter)
-    r = requests.post(hook, json={"Context":{"argv":{"chapters": chapters}}}, headers={'AirScript-Token': hook_key})
+    r = requests.post(hook, json={"Context":{"argv":{"chapters": chapters, "sheetName": sheet_name}}}, headers={'AirScript-Token': hook_key})
     print(r.json())
 else:
   print("请配置.env文件")
