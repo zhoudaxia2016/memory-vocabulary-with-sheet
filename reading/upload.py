@@ -9,7 +9,8 @@ hook = environ.get('hook')
 hook_key = environ.get('hook_key')
 collect_tags = ['VERB', 'NOUN', 'ADV', 'ADJ', 'DET', 'NUM']
 file_name = sys.argv[1]
-sheet_name = sys.argv[2]
+t = sys.argv[2]
+title = sys.argv[3]
 
 def newSentence(i, j):
   return {'text': '', 'sections': [], 'words': [], 'chapter': i + 1, 'paragraph': j + 1}
@@ -48,7 +49,7 @@ if isinstance(hook, str):
           sentences.append(sentence)
         chapter.append(sentences)
       chapters.append(chapter)
-    r = requests.post(hook, json={"Context":{"argv":{"chapters": chapters, "sheetName": sheet_name}}}, headers={'AirScript-Token': hook_key})
+    r = requests.post(hook, json={"Context":{"argv":{"chapters": chapters, "title": title, "type": t}}}, headers={'AirScript-Token': hook_key})
     print(r.json())
 else:
   print("请配置.env文件")
