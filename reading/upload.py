@@ -2,6 +2,7 @@ from os import environ
 from dotenv import load_dotenv
 import requests
 import sys
+import re
 from parse import parse
 from completions import completions
 
@@ -26,14 +27,15 @@ if isinstance(hook, str):
       if not translations:
         print('翻译出错', translations)
         quit()
-      translations = translations.split('\n')
+      translations = re.split(r'\n+', translations)
       paragraph_text = chapter_text.split('\n')
       chapter = []
       # paragraph由一个换行分割
       for j, paragraph_text in enumerate(paragraph_text):
         if paragraph_text == '':
           continue
-        paragraph_translation = translations[j].split('。')
+        trans_exceed = j >= len(translations)
+        paragraph_translation = '' if trans_exceed else translations[j].split('。')
         k = 0
         result = parse(paragraph_text)
         sentences = []
@@ -53,12 +55,14 @@ if isinstance(hook, str):
           sentence['sections'].append(section)
           sentence['text'] = sentence['text'] + text
           if is_end:
-            sentence['translation'] = paragraph_translation[k]
+            if not trans_exceed:
+              sentence['translation'] = paragraph_translation[k] if k < len(paragraph_translation) else ''
             k = k + 1
             sentences.append(sentence)
             sentence = newSentence(i, j)
         if sentence['text']:
-          sentence['translation'] = paragraph_translation[k]
+          if not trans_exceed:
+            sentence['translation'] = paragraph_translation[k] if k < len(paragraph_translation) else ''
           k = k + 1
           sentences.append(sentence)
         chapter.append(sentences)

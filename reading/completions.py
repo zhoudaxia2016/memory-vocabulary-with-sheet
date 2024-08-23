@@ -7,7 +7,7 @@ completions_key = environ.get('completions_key')
 completions_model = environ.get('completions_model')
 
 prompt = '''
-你是一个熟悉日语的大模型，请将下面日语歌词翻译成中文：
+你是一个熟悉日语的大模型，请将下面日语歌词翻译成中文（输出的行数要和输入的行数一致）：
 '''
 
 def completions(text):
