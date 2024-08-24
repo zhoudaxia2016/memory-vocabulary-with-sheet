@@ -9,13 +9,11 @@ from completions import completions
 load_dotenv()
 hook = environ.get('hook')
 hook_key = environ.get('hook_key')
-collect_tags = ['VERB', 'NOUN', 'ADV', 'ADJ', 'DET', 'NUM']
 file_name = sys.argv[1]
 t = sys.argv[2]
 title = sys.argv[3]
-
-def newSentence(i, j):
-  return {'text': '', 'sections': [], 'words': [], 'chapter': i + 1, 'paragraph': j + 1}
+# TODO: 长文翻译质量很差，待优化，长文先关闭翻译
+need_trans = False if len(sys.argv) < 5 else sys.argv[4] == '1'
 
 if isinstance(hook, str):
   with open(file_name) as f:
@@ -23,50 +21,34 @@ if isinstance(hook, str):
     chapters = []
     # chapter由两个换行分割
     for i, chapter_text in enumerate(chapter_texts):
-      translations = completions(chapter_text)
-      if not translations:
+      translations = need_trans and completions(chapter_text) or ''
+      if need_trans and not translations:
         print('翻译出错', translations)
         quit()
-      translations = re.split(r'\n+', translations)
+      translation_list = re.split(r'\n+', translations)
       paragraph_text = chapter_text.split('\n')
-      chapter = []
+      paragraphs = []
+      k = 0
       # paragraph由一个换行分割
       for j, paragraph_text in enumerate(paragraph_text):
         if paragraph_text == '':
           continue
-        trans_exceed = j >= len(translations)
-        paragraph_translation = '' if trans_exceed else translations[j].split('。')
-        k = 0
-        result = parse(paragraph_text)
-        sentences = []
-        sentence = newSentence(i, j)
-        for word in result:
-          section = ''
-          text = ''
-          is_end = False
-          for token in word['tokens']:
-            if token['text'] == '。':
-              is_end = True
-              break
-            text = text + token['text']
-            section = section + token['text'] + ('(' + token['kana'] + ')' if token['base'] != token['kana'] else '')
-            if token['tag'] in collect_tags:
-              sentence['words'].append({'base': token['base'], 'kana': token['kana']})
-          sentence['sections'].append(section)
-          sentence['text'] = sentence['text'] + text
-          if is_end:
-            if not trans_exceed:
-              sentence['translation'] = paragraph_translation[k] if k < len(paragraph_translation) else ''
-            k = k + 1
-            sentences.append(sentence)
-            sentence = newSentence(i, j)
-        if sentence['text']:
-          if not trans_exceed:
-            sentence['translation'] = paragraph_translation[k] if k < len(paragraph_translation) else ''
+        sentences = parse(paragraph_text)
+        translation = ''
+        if k < len(translation_list):
+          translation = translation_list[k]
           k = k + 1
-          sentences.append(sentence)
-        chapter.append(sentences)
-      chapters.append(chapter)
+        sentences = list(
+          map(
+            lambda x: {
+              'sections': x,
+              'translation': translation,
+            },
+            sentences,
+          )
+        )
+        paragraphs.append({'sentences': sentences, 'paragraph': j + 1})
+      chapters.append({'paragraphs': paragraphs, 'chapter': i + 1})
     r = requests.post(hook, json={"Context":{"argv":{"chapters": chapters, "title": title, "type": t}}}, headers={'AirScript-Token': hook_key})
     print(r.json())
 else:
