@@ -4,5 +4,8 @@
 .env文件：
 ```
 hook=xxx
-hook_key=yyy
+hook_key=xxx
+completions_key=xxx
+completions_url=xxx
+completions_model=xxx
 ```
