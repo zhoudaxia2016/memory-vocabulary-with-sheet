@@ -15,13 +15,20 @@ title = sys.argv[3]
 # TODO: 长文翻译质量很差，待优化，长文先关闭翻译
 need_trans = False if len(sys.argv) < 5 else sys.argv[4] == '1'
 
+type_map = {
+  'youtobe-NHK': '新闻',
+  '歌词': '歌词',
+  '青空文库': '小说',
+  'manga': '漫画',
+}
+
 if isinstance(hook, str):
   with open(file_name) as f:
     chapter_texts = f.read().split('\n\n')
     chapters = []
     # chapter由两个换行分割
     for i, chapter_text in enumerate(chapter_texts):
-      translations = need_trans and completions(chapter_text) or ''
+      translations = need_trans and completions(chapter_text, type_map[t]) or ''
       if need_trans and not translations:
         print('翻译出错', translations)
         quit()
